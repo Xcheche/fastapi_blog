@@ -41,10 +41,10 @@ It provides both **web views** and **API endpoints** for flexibility.
 ## 🖼️ Demo
 
 ### Web View
-![Web View Demo](static/readme/Screenshot%20from%202026-01-21%2015-55-05.png)
+![Web View Demo](static/readme/web.png)
 
 ### API View
-![API View Demo](static/readme/Screenshot%20from%202026-01-12%2021-06-07.png)
+![API View Demo](static/readme/api.png)
 
 ---
 
