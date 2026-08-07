@@ -6,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from exception_handlers import register_exception_handlers
+from schemas import PostCreate, PostResponse
 
 
 app = FastAPI()
@@ -35,20 +36,24 @@ posts: list[dict] = [
 # @app.get("/posts/", response_class=HTMLResponse)
 # async def read_root():
 #     return f"<h1>{posts[0]['title']}</h1><p>{posts[0]['content']}</p>"
-@app.get("/", include_in_schema=False)
+
+
 
 # Home page (non-API, monolithic style)
+@app.get("/", include_in_schema=False)
 async def home(request: Request):
     """ Render the home page with posts. """
     title="Home Page"
+    # Get by filter based on date created, descending order
+    sorted_posts = sorted(posts, key=lambda x: x["date_posted"], reverse=True)
     context={
         "request": request,
-        "posts": posts,
+        "posts": sorted_posts,
         "title": title
     }
     return templates.TemplateResponse(request,"blog/home.html",context)
 
-# Single poist page (non-API, monolithic style)
+# Single post page (non-API, monolithic style)
 @app.get("/posts/{post_id}", include_in_schema=False)
 async def post_detail(request: Request, post_id: int):
     """ Render a single post detail page. """
@@ -71,14 +76,37 @@ async def post_detail(request: Request, post_id: int):
 
 #------------------------------------------------------Api Endpoints-----------------------------------------------------
 # Get all posts
-@app.get("/api/posts/")
+@app.get("/api/posts/", response_model=list[PostResponse])
 async def get_posts():
     """ Return all posts as JSON. """
-    return posts
+     # Get by filter based on date created, descending order
+    sorted_posts = sorted(posts, key=lambda x: x["date_posted"], reverse=True)
+    return sorted_posts
+
+
+# Create a new post
+
+@app.post(
+    "/api/posts",
+    response_model=PostResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_post(post: PostCreate):
+    new_id = max(p["id"] for p in posts) + 1 if posts else 1
+    new_post = {
+        "id": new_id,
+        "author": post.author,
+        "title": post.title,
+        "content": post.content,
+        "date_posted": "April 23, 2025",
+    }
+    posts.append(new_post)
+    return new_post
+
 
 
 # Get a single post by ID
-@app.get("/api/posts/{post_id}")
+@app.get("/api/posts/{post_id}", response_model=PostResponse)
 def get_post(post_id: int):
     """
     Return a single post by ID.
